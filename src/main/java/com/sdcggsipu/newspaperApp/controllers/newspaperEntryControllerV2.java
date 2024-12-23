@@ -1,7 +1,9 @@
 package com.sdcggsipu.newspaperApp.controllers;
 
 import com.sdcggsipu.newspaperApp.entity.newspaperEntry;
+import com.sdcggsipu.newspaperApp.entity.user;
 import com.sdcggsipu.newspaperApp.services.newspaperEntryService;
+import com.sdcggsipu.newspaperApp.services.userService;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,21 +20,24 @@ public class newspaperEntryControllerV2 {
     @Autowired
     private newspaperEntryService newspaperEntryService;
 
-    @GetMapping
-    public ResponseEntity<?> getAll() {
-        List<newspaperEntry> all = newspaperEntryService.getAllEntries();
+    @Autowired
+    private userService userService;
+
+    @GetMapping("/{username}")
+    public ResponseEntity<?> getAllNewspaperEntryOfUsers(@PathVariable String username) {
+        user user = userService.findByUsername(username);
+        List<newspaperEntry> all = user.getNewspaperEntries();
         if (all.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }else{
-            return new ResponseEntity<>(all, HttpStatus.OK); 
+            return new ResponseEntity<>(all, HttpStatus.OK);
         }
     }
 
-    @PostMapping
-    public ResponseEntity<newspaperEntry> createEntry(@RequestBody newspaperEntry myEntry) {
+    @PostMapping("/{username}")
+    public ResponseEntity<newspaperEntry> createEntry(@RequestBody newspaperEntry myEntry, @PathVariable String username) {
         try {
-            myEntry.setDate(LocalDateTime.now());
-            newspaperEntryService.saveEntry(myEntry);
+            newspaperEntryService.saveEntry(myEntry, username);
             return new ResponseEntity<>(myEntry, HttpStatus.CREATED);
         }catch (Exception e){
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -56,13 +61,13 @@ public class newspaperEntryControllerV2 {
 
     @PutMapping("id/{myId}")
     public ResponseEntity<?> updateEntryById(@PathVariable ObjectId myId, @RequestBody newspaperEntry newEntry) {
-        newspaperEntry oldEntry = newspaperEntryService.getEntryById(myId).orElse(null);
-        if(oldEntry != null) {
-            oldEntry.setTitle(newEntry.getTitle() != null ? newEntry.getTitle() : oldEntry.getTitle());
-            oldEntry.setContent(newEntry.getContent() != null ? newEntry.getContent() : oldEntry.getContent());
-            newspaperEntryService.saveEntry(oldEntry);
-            return new ResponseEntity<>(HttpStatus.OK);
-        }
+//        newspaperEntry oldEntry = newspaperEntryService.getEntryById(myId).orElse(null);
+//        if(oldEntry != null) {
+//            oldEntry.setTitle(newEntry.getTitle() != null ? newEntry.getTitle() : oldEntry.getTitle());
+//            oldEntry.setContent(newEntry.getContent() != null ? newEntry.getContent() : oldEntry.getContent());
+//            newspaperEntryService.saveEntry(oldEntry, user);
+//            return new ResponseEntity<>(HttpStatus.OK);
+//        }
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 }
